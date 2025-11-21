@@ -3,20 +3,20 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/supabaseServer";
 
-type LoginState = {
-  error?: string;
-};
-
-export async function loginAction(
-  _prevState: LoginState,
-  formData: FormData
-): Promise<LoginState> {
+/**
+ * Server Action usado por useFormState.
+ * Assinatura: (formData: FormData)
+ */
+export async function loginAction(formData: FormData) {
   const supabase = createSupabaseServerClient();
 
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = (formData.get("email") || "").toString().trim();
+  const password = (formData.get("password") || "").toString();
 
-  // 🔐 Login seguro
+  if (!email || !password) {
+    return { error: "Preencha todos os campos." };
+  }
+
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -26,6 +26,6 @@ export async function loginAction(
     return { error: "Credenciais inválidas. Tente novamente." };
   }
 
-  // Sessão criada → redirecionar
+  // Login OK → redireciona
   redirect("/dashboard");
 }
